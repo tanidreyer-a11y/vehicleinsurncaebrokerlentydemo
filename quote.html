@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Get a Quote | Car Insurance</title>
+  <meta name="description" content="A short, tap-friendly form. Your answers save as you go, and I'll come back to you with quotes compared across insurers.">
+  <meta name="theme-color" content="#faf7f5">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Schibsted+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/quote.css">
+  <script src="assets/js/config.js"></script>
+</head>
+<body class="quote-page">
+  <header class="qhead">
+    <div class="qhead__inner">
+      <a class="brand" href="./" aria-label="Back to the home page">
+        <span class="brand__mark" data-site="initials">BN</span>
+        <span class="brand__name" data-site="businessName">Broker Name Insurance</span>
+      </a>
+      <a class="qhead__help" data-site-href="tel" href="tel:+27721470288">
+        <span class="qhead__help-label">Stuck? Call</span>
+        <span data-site="phoneDisplay">072 147 0288</span>
+      </a>
+    </div>
+    <div class="progress" role="progressbar" aria-label="Quote progress" aria-valuemin="1" aria-valuenow="1" aria-valuemax="12">
+      <span class="progress__bar"></span>
+    </div>
+  </header>
+
+  <main class="qmain" id="main">
+    <div class="resume" id="resume" hidden>
+      <p>Welcome back. I kept your answers from last time.</p>
+      <button type="button" class="linkbtn" id="resume-restart">Start over</button>
+    </div>
+
+    <form id="quote" novalidate>
+      <div class="qmeta" aria-hidden="true">
+        <span id="stepcount">Step 1</span>
+        <span id="timeleft"></span>
+      </div>
+
+      <div id="stage">
+        <noscript><p class="noscript">This form needs JavaScript switched on. You can also call <a href="tel:+27721470288">072 147 0288</a> or WhatsApp the same number.</p></noscript>
+      </div>
+
+      <!-- Honeypot: hidden from people, bots fill it in -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Leave this empty</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="qnav">
+        <div class="qnav__inner">
+          <button type="button" class="btn btn--ghost qnav__back" id="back" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M19 12H6M11 6l-6 6 6 6"/></svg>
+            <span class="sr-only">Back</span>
+          </button>
+          <button type="button" class="btn qnav__next" id="next">
+            <span>Continue</span>
+            <svg class="icon-arrow" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h13M13 6l6 6-6 6"/></svg>
+            <i class="spinner" aria-hidden="true"></i>
+          </button>
+        </div>
+        <p class="qnav__safe">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          Saved on your phone as you go. Protected under POPIA.
+        </p>
+      </div>
+    </form>
+
+    <section class="done" id="done" hidden aria-labelledby="done-title">
+      <svg class="done__mark" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="29" />
+        <path d="M19 33l9 9 17-19" />
+      </svg>
+      <h1 id="done-title" tabindex="-1">Thank you. You're all done.</h1>
+      <p class="done__how" id="done-how">I'll be in touch within one working day with your quotes.</p>
+      <p class="done__ref">Your reference <strong id="done-ref">Q000000-XXXX</strong></p>
+      <p class="done__test" id="done-test" hidden>Test mode: this went to the local test file, not to Google Sheets or email yet.</p>
+
+      <div class="done__next">
+        <h2>What happens next</h2>
+        <ol>
+          <li>I take your details to several insurers.</li>
+          <li>I come back to you with the options side by side, including the excess.</li>
+          <li>You choose. I handle the switch and the paperwork.</li>
+        </ol>
+      </div>
+      <div class="done__actions">
+        <a class="btn" data-site-href="wa" href="https://wa.me/27721470288">Message me on WhatsApp</a>
+        <a class="btn btn--ghost" href="./">Back to the home page</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/site.js"></script>
+  <script src="assets/js/quote-data.js"></script>
+  <script src="assets/js/quote.js"></script>
+</body>
+</html>

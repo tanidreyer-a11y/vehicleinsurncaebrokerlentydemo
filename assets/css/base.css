@@ -1,0 +1,112 @@
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+:root {
+  --paper: #faf7f5;
+  --surface: #f2ece8;
+  --card: #fffdfc;
+  --line: #e2d9d4;          /* decorative dividers only */
+  --field: #8a7d7f;         /* interactive borders: 3:1+ against paper */
+  --ink: #1c1718;
+  --ink-2: #544a4c;         /* secondary text, tinted from the ink hue */
+  --red: #a51c30;           /* the one accent */
+  --red-press: #8a1627;
+  --red-deep: #5c0c19;      /* dark band ground */
+  --red-tint: #f7e7e9;      /* selected state wash */
+  --on-dark: #f8efed;
+  --on-dark-2: #dcc4c7;
+  --ok: #1f6b45;
+
+  --font-display: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, sans-serif;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  --maxw: 1180px;
+
+  /* z-index scale, the only values used anywhere */
+  --z-header: 20;
+  --z-bar: 30;
+  --z-toast: 40;
+}
+
+/* ── Reset & ground ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scrollbar-color: #b9aaa9 var(--paper); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+[hidden] { display: none !important; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; margin: 0; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+
+::selection { background: var(--red); color: #fff8f7; }
+:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; border-radius: 6px; }
+::-webkit-scrollbar { width: 11px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: #c4b6b5; border-radius: 99px; border: 3px solid var(--paper); }
+
+.skip {
+  position: absolute; left: 1rem; top: -4rem; z-index: var(--z-toast);
+  background: var(--ink); color: var(--paper); padding: 0.6rem 1rem; border-radius: 8px;
+}
+.skip:focus { top: 1rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wrap { width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; }
+
+/* ── Logo mark ────────────────────────────────────────────────────────────── */
+.brand { display: inline-flex; align-items: center; gap: 0.65rem; text-decoration: none; }
+.brand__mark {
+  display: grid; place-items: center;
+  width: 2.35rem; height: 2.35rem; border-radius: 9px;
+  background: var(--red); color: #fff8f7;
+  font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; letter-spacing: 0.02em;
+}
+.brand__name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; line-height: 1.15; }
+.brand__name small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 0.78rem; color: var(--ink-2); letter-spacing: 0; }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn {
+  --bg: var(--red); --fg: #fff8f7;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+  min-height: 3.25rem; padding: 0 1.5rem;
+  border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--bg); color: var(--fg);
+  font-weight: 650; font-size: 1.02rem; text-decoration: none; white-space: nowrap;
+  transition: transform 120ms var(--ease-out), background-color 160ms ease;
+}
+.btn:active { transform: scale(0.97); }
+.btn:hover { background: var(--red-press); }
+.btn svg { width: 1.1em; height: 1.1em; flex: none; transition: transform 200ms var(--ease-out); }
+.btn--ghost { --bg: transparent; --fg: var(--ink); box-shadow: inset 0 0 0 1.5px var(--field); }
+.btn--ghost:hover { background: var(--surface); }
+.btn--light { --bg: #fff8f7; --fg: var(--red-deep); }
+.btn--light:hover { background: #fff; }
+.btn--sm { min-height: 2.6rem; padding: 0 1.1rem; font-size: 0.95rem; }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover .icon-arrow { transform: translateX(3px); }
+}
+
+.link-quiet { color: var(--ink-2); font-weight: 550; text-decoration: none; }
+.link-quiet:hover { color: var(--ink); text-decoration: underline; }
+
+/* Reduced motion: each component drops its movement and keeps a plain fade (see landing.css,
+   quote.css). Only the press scale is global. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .btn:active { transform: none; }
+}

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business Card Draft</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Schibsted+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <style>
+    /* 90 x 50 mm, the standard South African card size */
+    .sheet { max-width: 60rem; margin-inline: auto; padding: 2rem var(--gutter) 4rem; }
+    .sheet h1 { font-size: 1.8rem; letter-spacing: -0.02em; }
+    .sheet > p { color: var(--ink-2); margin-top: 0.5rem; max-width: 60ch; }
+    .warn { margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 10px; background: #fff4d6; }
+    .warn[hidden] { display: none; }
+    .url { margin-top: 1rem; font-size: 0.92rem; overflow-wrap: anywhere; }
+    .cards { display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem; }
+    .card { width: 90mm; height: 50mm; border-radius: 3mm; overflow: hidden; box-shadow: 0 18px 40px -18px rgb(60 20 25 / 0.45); position: relative; flex: none; }
+    .front { background: var(--card); color: var(--ink); padding: 6mm 6.5mm; display: grid; grid-template-rows: auto 1fr auto; }
+    .front .top { display: flex; align-items: center; gap: 2.5mm; }
+    .front .mk { width: 8mm; height: 8mm; border-radius: 2mm; background: var(--red); color: #fff8f7; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 3.2mm; }
+    .front .biz { font-family: var(--font-display); font-weight: 700; font-size: 3.3mm; letter-spacing: -0.01em; }
+    .front .who { align-self: end; }
+    .front .who strong { display: block; font-family: var(--font-display); font-size: 5.2mm; letter-spacing: -0.02em; line-height: 1.1; }
+    .front .who span { font-size: 2.8mm; color: var(--ink-2); }
+    .front .line { display: flex; justify-content: space-between; align-items: end; margin-top: 3mm; padding-top: 2.5mm; border-top: 0.3mm solid var(--line); font-size: 2.7mm; }
+    .front .line b { font-size: 3.6mm; font-variant-numeric: tabular-nums; }
+    .front .fsp { color: var(--ink-2); font-size: 2.2mm; }
+    .back { background: var(--red); color: #fff8f7; display: grid; grid-template-columns: 30mm 1fr; align-items: center; gap: 5mm; padding: 5mm 6mm; }
+    .qr { background: #fff; border-radius: 2mm; padding: 1.8mm; width: 30mm; height: 30mm; }
+    .qr svg { width: 100%; height: 100%; display: block; }
+    .back strong { display: block; font-family: var(--font-display); font-size: 5mm; line-height: 1.08; letter-spacing: -0.02em; }
+    .back p { font-size: 2.8mm; margin-top: 2mm; color: #f6dfe2; line-height: 1.35; }
+    .actions { margin-top: 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    @media print {
+      @page { size: 90mm 50mm; margin: 0; }
+      body { background: none; }
+      .sheet > :not(.cards) { display: none; }
+      .sheet { padding: 0; max-width: none; }
+      .cards { display: block; margin: 0; }
+      .card { box-shadow: none; border-radius: 0; page-break-after: always; break-after: page; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+  <main class="sheet">
+    <h1>Business card draft</h1>
+    <p>Front and back at real size (90 × 50 mm). Print to PDF and each side comes out as its own page at card size, ready for a print shop. Ask them to add 3 mm bleed.</p>
+    <p class="warn" id="warn" hidden>This QR code points to a test address. Set <code>siteUrl</code> in <code>assets/js/config.js</code> to the live website before printing anything.</p>
+    <p class="url">QR code opens: <strong id="qr-url"></strong></p>
+
+    <div class="cards">
+      <div class="card front">
+        <div class="top"><span class="mk" data-site="initials">BN</span><span class="biz" data-site="businessName">Broker Name Insurance</span></div>
+        <div class="who"><strong data-site="brokerName">Broker Name</strong><span>Independent insurance broker</span></div>
+        <div class="line"><div><b data-site="phoneDisplay">072 147 0288</b><div>Call or WhatsApp</div></div><span class="fsp" data-site="fspLine">Authorised FSP</span></div>
+      </div>
+      <div class="card back">
+        <div class="qr" id="qr" role="img" aria-label="QR code to the quote form"></div>
+        <div><strong>Scan for a car insurance quote.</strong><p>About 4 minutes, mostly tapping. I compare insurers and come back to you.</p></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" type="button" onclick="window.print()">Print / save as PDF</button>
+      <a class="btn btn--ghost" href="quote.html?src=card">Open the link it points to</a>
+    </div>
+  </main>
+  <script src="assets/js/site.js"></script>
+  <script>
+    (function () {
+      const S = window.SITE || {};
+      const base = (S.siteUrl || location.origin + location.pathname.replace(/card\.html$/, "")).replace(/\/?$/, "/");
+      const url = base + "quote.html?src=card";
+      document.getElementById("qr-url").textContent = url;
+      document.getElementById("warn").hidden = !!S.siteUrl && !/localhost|127\.0|192\.168|10\./.test(S.siteUrl);
+      if (window.qrcode) {
+        const qr = qrcode(0, "M");
+        qr.addData(url);
+        qr.make();
+        document.getElementById("qr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+      }
+    })();
+  </script>
+</body>
+</html>

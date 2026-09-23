@@ -1,0 +1,68 @@
+// Dropdown lists for the quote form. Plain arrays so they're easy to edit.
+window.QDATA = (function () {
+  const thisYear = new Date().getFullYear();
+  const range = (from, to) => Array.from({ length: from - to + 1 }, (_, i) => String(from - i));
+
+  const MODELS = {
+    Toyota: ["Corolla", "Corolla Cross", "Corolla Quest", "Hilux", "Fortuner", "Starlet", "Urban Cruiser", "Rumion", "Vitz", "Agya", "Yaris", "Etios", "Avanza", "Rush", "RAV4", "C-HR", "Quantum", "Land Cruiser", "Hiace"],
+    Volkswagen: ["Polo Vivo", "Polo", "Golf", "T-Cross", "Taigo", "Tiguan", "T-Roc", "Amarok", "Jetta", "Caddy", "Passat", "Kombi"],
+    Suzuki: ["Swift", "Dzire", "Ciaz", "Baleno", "Celerio", "S-Presso", "Alto", "Ertiga", "XL6", "Vitara Brezza", "Fronx", "Jimny", "Grand Vitara", "Eeco", "Super Carry"],
+    Ford: ["Ranger", "EcoSport", "Figo", "Fiesta", "Focus", "Everest", "Territory", "Puma", "Kuga", "Tourneo", "Transit"],
+    Hyundai: ["i10", "Grand i10", "i20", "Accent", "Atos", "Venue", "Creta", "Tucson", "Santa Fe", "Staria", "H100"],
+    Nissan: ["NP200", "NP300", "Navara", "Almera", "Micra", "Magnite", "Qashqai", "X-Trail", "Livina"],
+    Renault: ["Kwid", "Sandero", "Triber", "Kiger", "Duster", "Clio", "Captur"],
+    Kia: ["Picanto", "Rio", "Pegas", "Soluto", "Sonet", "Seltos", "Sportage", "Sorento", "Carnival"],
+    Isuzu: ["D-Max", "MU-X", "KB"],
+    Haval: ["Jolion", "H6", "H2"],
+    GWM: ["P-Series", "Steed", "Ora"],
+    Chery: ["Tiggo 4 Pro", "Tiggo 7 Pro", "Tiggo 8 Pro"],
+    Omoda: ["C5", "C9"],
+    Mahindra: ["Pik Up", "Scorpio", "XUV300", "XUV700", "KUV100", "Bolero"],
+    Honda: ["Jazz", "Amaze", "Ballade", "BR-V", "WR-V", "HR-V", "CR-V", "Civic"],
+    Mazda: ["Mazda2", "Mazda3", "CX-3", "CX-30", "CX-5", "BT-50"],
+    Datsun: ["Go", "Go+"],
+    Mitsubishi: ["Triton", "Pajero Sport", "ASX", "Outlander", "Xpander"],
+    BMW: ["1 Series", "2 Series", "3 Series", "5 Series", "X1", "X3", "X5"],
+    "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "GLA", "GLC", "GLE", "Vito", "Sprinter"],
+    Audi: ["A1", "A3", "A4", "Q2", "Q3", "Q5", "Q7"],
+    Opel: ["Corsa", "Astra", "Mokka", "Crossland", "Grandland"],
+    Peugeot: ["208", "2008", "3008", "Landtrek"],
+    Jeep: ["Renegade", "Compass", "Wrangler", "Grand Cherokee"],
+    "Land Rover": ["Defender", "Discovery Sport", "Range Rover Evoque", "Range Rover Sport"],
+    Volvo: ["XC40", "XC60", "XC90"],
+    Subaru: ["Forester", "Outback", "XV"],
+    Fiat: ["500", "Panda", "Tipo"],
+    BAIC: ["Beijing X55", "B40"],
+    JAC: ["T8", "T9"],
+    BYD: ["Atto 3", "Dolphin", "Seal"],
+    Lexus: ["IS", "NX", "RX"],
+    Mini: ["Cooper", "Countryman"],
+    Porsche: ["Cayenne", "Macan", "911"],
+  };
+
+  return {
+    YEARS: range(thisYear + 1, 1985),
+    LICENCE_YEARS: range(thisYear, 1960),
+    MAKES: [...Object.keys(MODELS).sort((a, b) => a.localeCompare(b)), "Other"],
+    MODELS,
+    PROVINCES: ["Gauteng", "Western Cape", "KwaZulu-Natal", "Eastern Cape", "Free State", "Limpopo", "Mpumalanga", "North West", "Northern Cape"],
+    MARITAL: ["Single", "Married", "Living together", "Divorced", "Widowed"],
+    OCCUPATIONS: ["Accountant", "Admin / office worker", "Artisan (electrician, plumber, etc.)", "Business owner", "Cashier", "Civil servant", "Doctor", "Driver", "Engineer", "Farmer", "IT professional", "Lawyer", "Manager", "Mine worker", "Nurse", "Police officer", "Retired", "Sales representative", "Security officer", "Self-employed", "Soldier", "Student", "Teacher", "Unemployed"],
+    LICENCE_CODES: [
+      { value: "B", label: "B (Code 8): light motor vehicle" },
+      { value: "EB", label: "EB: light vehicle with heavy trailer" },
+      { value: "C1", label: "C1 (Code 10): heavy vehicle up to 16 t" },
+      { value: "EC1", label: "EC1: C1 with trailer" },
+      { value: "C", label: "C (Code 14): heavy vehicle" },
+      { value: "EC", label: "EC: articulated heavy vehicle" },
+      { value: "A1", label: "A1: motorcycle up to 125 cc" },
+      { value: "A", label: "A: motorcycle over 125 cc" },
+      { value: "Learner's", label: "Learner's licence only" },
+      { value: "Foreign", label: "Foreign or international licence" },
+    ],
+    INSURERS: ["Santam", "OUTsurance", "Discovery Insure", "Hollard", "King Price", "MiWay", "Old Mutual Insure", "Momentum Insure", "Auto & General", "Budget Insurance", "Dial Direct", "1st for Women", "Virseker", "Bryte", "Absa Insurance", "FNB Insurance", "Standard Bank Insurance", "Nedbank Insurance", "Naked", "Pineapple", "Other"],
+    BANKS: ["Absa", "FNB / WesBank", "Standard Bank", "Nedbank / MFC", "Capitec", "Investec", "SA Home Loans", "Other"],
+    TRACKERS: ["None", "Netstar", "Tracker", "Cartrack", "MiX Telematics", "Ctrack", "Matrix", "Other"],
+    EXTRAS: ["Mag wheels", "Canopy", "Tow bar", "Bull bar", "Roof racks", "Aftermarket sound system", "Body kit / spoiler", "Other"],
+  };
+})();

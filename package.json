@@ -1,0 +1,9 @@
+{
+  "name": "insurance-broker",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Landing page and quote form for an independent insurance broker. Static site; submissions go to Google Sheets via Apps Script.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
