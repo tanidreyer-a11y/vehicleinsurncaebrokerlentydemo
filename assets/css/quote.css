@@ -120,6 +120,17 @@
 .decoded .tick { width: 1.1rem; height: 1.1rem; }
 .decoded.is-ok { animation: arrive 300ms var(--ease-out); }
 
+/* ── Claims: one row of dropdowns per claim ─────────────────────────────── */
+.claimrows { display: grid; gap: 0.6rem; }
+.claimrows__row { display: grid; grid-template-columns: 1.75rem 7.5rem 1fr; gap: 0.5rem; align-items: center; animation: arrive 300ms var(--ease-out); }
+.claimrows__n { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--surface); font-weight: 700; font-size: 0.85rem; color: var(--ink-2); }
+@media (max-width: 400px) { .claimrows__row { grid-template-columns: 1.5rem 6.25rem 1fr; } }
+
+/* ── Email typo suggestion ────────────────────────────────────────────────── */
+.suggest { margin-top: 0.5rem; font-size: 0.93rem; color: var(--ink-2); animation: arrive 250ms var(--ease-out); }
+.suggest strong { color: var(--ink); }
+.suggest .linkbtn { min-height: 0; padding: 0; margin-left: 0.25rem; }
+
 /* ── Repeatable rows ──────────────────────────────────────────────────────── */
 .repeat { display: grid; gap: 0.6rem; }
 .repeat:empty { display: none; }
@@ -193,7 +204,7 @@
 
 /* ── Reduced motion: keep the fades, drop the movement ────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .step.enter-fwd, .step.enter-back, .field.is-arriving, .repeat__row.is-arriving, .decoded.is-ok { animation: fade 200ms ease; }
+  .step.enter-fwd, .step.enter-back, .field.is-arriving, .repeat__row.is-arriving, .decoded.is-ok, .claimrows__row, .suggest { animation: fade 200ms ease; }
   .nudge { animation: none; }
   .progress__bar { transition: none; }
   .opt-btn span, .card-opt, .opt-btn input:active + span { transform: none !important; }

@@ -57,6 +57,7 @@
       dob: dob.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" }),
       gender: +id[6] >= 5 ? "Male" : "Female",
       citizen: id[10] === "0" ? "SA citizen" : "Permanent resident",
+      birthYear: year,
       formatted: `${id.slice(0, 6)} ${id.slice(6, 10)} ${id.slice(10)}`,
     };
   }
@@ -82,10 +83,12 @@
 
   /* ── The questions ──────────────────────────────────────────────────────── */
   const yesNo = ["Yes", "No"];
+  const OTHER_MODEL = "Other / not listed";
+  const modelOf = (v) => (v.model && v.model !== OTHER_MODEL ? v.model : v.modelOther) || "";
 
   function vehicleName(d, i) {
     const v = d.vehicles[i] || {};
-    const name = [v.make !== "Other" ? v.make : "", v.model].filter(Boolean).join(" ");
+    const name = [v.make === "Other" ? v.makeOther : v.make, modelOf(v)].filter(Boolean).join(" ");
     if (name) return `your ${name}`;
     return d.vehicles.length > 1 || i > 0 ? `vehicle ${i + 1}` : "your car";
   }
@@ -104,10 +107,12 @@
         sub: "Your licence disc or registration papers have all of this.",
         fields: [
           { name: "year", label: "Year", short: "Year", type: "select", options: D.YEARS, required: true, half: true },
-          { name: "make", label: "Make", short: "Make", type: "select", options: D.MAKES, required: true, half: true },
+          { name: "make", label: "Make", short: "Make", type: "select", options: D.MAKES, popular: D.POPULAR_MAKES, required: true, half: true },
           { name: "makeOther", label: "Which make?", short: "Make (other)", type: "text", required: true, when: (d, v) => v.make === "Other" },
-          { name: "model", label: "Model", short: "Model", type: "combo", required: true, placeholder: "Pick or type the model",
-            list: (d, v) => D.MODELS[v.make] || [] },
+          { name: "model", label: "Model", short: "Model", type: "select", required: true,
+            list: (d, v) => [...(D.MODELS[v.make] || []), OTHER_MODEL], when: (d, v) => !!D.MODELS[v.make] },
+          { name: "modelOther", label: "Which model?", short: "Model (typed)", type: "text", required: true,
+            when: (d, v) => v.make === "Other" || v.model === OTHER_MODEL },
           { name: "variant", label: "Engine or spec", short: "Variant", type: "text", optional: true, placeholder: "e.g. 1.4 GLX automatic",
             hint: "If you know it. It helps get the value right." },
           { name: "reg", label: "Registration number", short: "Registration", type: "text", optional: true, upper: true, autocomplete: "off",
@@ -140,6 +145,11 @@
             options: ["Spouse or partner", "Son or daughter", "Parent", "Other family", "Employee", "Friend", "Other"], when: (d, v) => v.driver === "Someone else" },
           { name: "licenceCode", label: "Driver's licence code", short: "Licence code", type: "select", options: D.LICENCE_CODES, required: true },
           { name: "licenceYear", label: "Year the licence was issued", short: "Licence issued", type: "select", options: D.LICENCE_YEARS, required: true,
+            validate: (y, d, v) => {
+              if (v.driver !== "Someone else") return "";
+              const r = parseSaId(v.driverId);
+              return r.ok && +y < r.birthYear + 16 ? `The driver's ID says they were born in ${r.birthYear}, so the licence can't be from ${y}. Please check.` : "";
+            },
             hint: "It's printed on the licence card." },
         ],
       },
@@ -173,8 +183,10 @@
           { name: "carHire", label: "Would you like car hire if it's in for repairs?", short: "Car hire", type: "choice", options: yesNo, required: true },
           { name: "claims", label: "Claims on any car in the last 3 years?", short: "Claims (3 yrs)", type: "choice", required: true,
             options: ["None", "1", "2", "3 or more"] },
-          { name: "claimsDetail", label: "What happened, and when?", short: "Claims detail", type: "textarea", required: true,
-            placeholder: "e.g. 2020, hijacked", when: (d, v) => v.claims && v.claims !== "None" },
+          { name: "claimsList", label: "Tell me about each claim", short: "Claims detail", type: "claimrows", required: true,
+            when: (d, v) => v.claims && v.claims !== "None", rows: (d, v) => ({ 1: 1, 2: 2, "3 or more": 3 }[v.claims] || 0) },
+          { name: "claimsMore", label: "Any more claims, or anything to add?", short: "Claims note", type: "textarea", optional: true,
+            when: (d, v) => v.claims === "3 or more" },
         ],
         extra: i === d.vehicles.length - 1 && d.vehicles.length < MAX_VEHICLES
           ? `<button type="button" class="addbtn" data-action="add-vehicle"><span aria-hidden="true">+</span> Add another vehicle</button>` : "",
@@ -207,12 +219,18 @@
         { name: "you.lastName", label: "Surname", short: "Surname", type: "text", autocomplete: "family-name", required: true, half: true },
         { name: "you.idType", label: "I'll identify with my", short: "ID type", type: "choice", options: ["SA ID number", "Passport"], required: true, default: "SA ID number" },
         { name: "you.idNumber", label: "SA ID number", short: "ID number", type: "idnumber", required: true, adult: true, when: (d) => d.you?.idType !== "Passport",
+          validate: (v, d) => {
+            const r = parseSaId(v);
+            const bad = d.vehicles.findIndex((x) => x.driver === "Me" && x.licenceYear && +x.licenceYear < r.birthYear + 16);
+            return bad >= 0 ? `Your ID says you were born in ${r.birthYear}, but ${vehicleName(d, bad)} has your licence issued in ${d.vehicles[bad].licenceYear}. Please check one of them.` : "";
+          },
           hint: "I'll read your date of birth from it, so you don't have to type it." },
         { name: "you.passport", label: "Passport number", short: "Passport number", type: "text", required: true, upper: true, when: (d) => d.you?.idType === "Passport" },
         { name: "you.dob", label: "Date of birth", short: "Date of birth", type: "date", required: true, half: true, when: (d) => d.you?.idType === "Passport" },
         { name: "you.gender", label: "Gender", short: "Gender", type: "select", options: ["Female", "Male"], required: true, half: true, when: (d) => d.you?.idType === "Passport" },
         { name: "you.marital", label: "Marital status", short: "Marital status", type: "select", options: D.MARITAL, required: true, half: true },
-        { name: "you.occupation", label: "Occupation", short: "Occupation", type: "combo", list: () => D.OCCUPATIONS, required: true, half: true, placeholder: "Pick or type" },
+        { name: "you.occupation", label: "Occupation", short: "Occupation", type: "select", options: [...D.OCCUPATIONS, "Other"], required: true, half: true },
+        { name: "you.occupationOther", label: "Your occupation", short: "Occupation (typed)", type: "text", required: true, when: (d) => d.you?.occupation === "Other" },
       ],
     });
     out.push({
@@ -251,7 +269,7 @@
       sub: "This helps me find a better deal than what you have now.",
       fields: [
         { name: "insured", label: "Are you insured at the moment?", short: "Currently insured", type: "choice", options: yesNo, required: true },
-        { name: "insurer", label: "Who with?", short: "Current insurer", type: "select", options: D.INSURERS, required: true, half: true, when: (d, h) => h.insured === "Yes" },
+        { name: "insurer", label: "Who with?", short: "Current insurer", type: "select", options: D.INSURERS, popular: D.POPULAR_INSURERS, required: true, half: true, when: (d, h) => h.insured === "Yes" },
         { name: "years", label: "For how long?", short: "Years with insurer", type: "select", required: true, half: true,
           options: ["Less than a year", "1 to 2 years", "3 to 5 years", "More than 5 years"], when: (d, h) => h.insured === "Yes" },
         { name: "premium", label: "Monthly premium", short: "Current premium", type: "money", optional: true, half: true, when: (d, h) => h.insured === "Yes" },
@@ -326,12 +344,22 @@
             <span class="card-opt__icon"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[o.icon] || ""}</svg></span>
             <span class="card-opt__text"><strong>${esc(o.label)}</strong>${o.hint ? `<small>${esc(o.hint)}</small>` : ""}</span>
             <span class="card-opt__check">${TICK}</span></label>`).join("")}</div>${err}</fieldset>`;
-      case "select":
+      case "select": {
+        if (f.list) {
+          const list = f.list(data, scopeOf(step));
+          opts.splice(0, opts.length, ...list.map((o) => ({ value: o, label: o })));
+          if (val && !list.includes(val)) { set(data, path, ""); val = ""; }
+        }
+        const optHtml = (list) => list.map((o) => `<option value="${esc(o.value)}"${val === o.value ? " selected" : ""}>${esc(o.label)}</option>`).join("");
+        const body = f.popular
+          ? `<optgroup label="Most common">${optHtml(f.popular.map((p) => ({ value: p, label: p })))}</optgroup><optgroup label="All, A to Z">${optHtml(opts)}</optgroup>`
+          : optHtml(opts);
         return `<div class="${cls}" data-path="${path}"${hidden}>
           <label for="${id}">${esc(f.label)}${opt}</label>${hint}
           <div class="select"><select id="${id}" name="${path}" aria-describedby="${describedBy}"${req}>
-            <option value="">Choose</option>${opts.map((o) => `<option value="${esc(o.value)}"${val === o.value ? " selected" : ""}>${esc(o.label)}</option>`).join("")}
+            <option value="">Choose</option>${body}
           </select></div>${err}</div>`;
+      }
       case "textarea":
         return `<div class="${cls}" data-path="${path}"${hidden}><label for="${id}">${esc(f.label)}${opt}</label>${hint}
           <textarea id="${id}" name="${path}" rows="3" placeholder="${esc(f.placeholder || "")}" aria-describedby="${describedBy}"${req}>${esc(val || "")}</textarea>${err}</div>`;
@@ -359,6 +387,15 @@
           <input id="${id}" name="${path}" type="text" list="${id}-list" autocomplete="off" placeholder="${esc(f.placeholder || "")}" value="${esc(val || "")}" aria-describedby="${describedBy}"${req}>
           <datalist id="${id}-list">${list.map((m) => `<option value="${esc(m)}">`).join("")}</datalist>${err}</div>`;
       }
+      case "claimrows": {
+        const n = f.rows(data, scopeOf(step));
+        const rows = Array.from({ length: n }, (_, k) => (val || [])[k] || {});
+        const years = [String(new Date().getFullYear()), ...D.LICENCE_YEARS.slice(1, 5), "Earlier"];
+        const sel = (name, list, cur, label) => `<div class="select"><select name="${name}" aria-label="${label}"><option value="">${label}</option>${list.map((o) => `<option${cur === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></div>`;
+        return `<div class="${cls}" data-path="${path}" data-rows="${n}"${hidden}><p class="label">${esc(f.label)}</p>
+          <div class="claimrows">${rows.map((r, k) => `<div class="claimrows__row"><span class="claimrows__n">${k + 1}</span>
+            ${sel(`${path}.${k}.year`, years, r.year, "Year")}${sel(`${path}.${k}.type`, D.CLAIM_TYPES, r.type, "What happened")}</div>`).join("")}</div>${err}</div>`;
+      }
       case "idnumber":
         return `<div class="${cls}" data-path="${path}"${hidden}><label for="${id}">${esc(f.label)}${opt}</label>${hint}
           <input id="${id}" name="${path}" type="text" inputmode="numeric" autocomplete="off" maxlength="16" placeholder="13 digits" value="${esc(val || "")}" aria-describedby="${id}-decoded ${describedBy}"${req}>
@@ -368,7 +405,7 @@
         const type = f.type === "tel" ? "tel" : f.type;
         return `<div class="${cls}" data-path="${path}"${hidden}><label for="${id}">${esc(f.label)}${opt}</label>${hint}
           <input id="${id}" name="${path}" type="${type}"${f.autocomplete ? ` autocomplete="${f.autocomplete}"` : ""}${f.inputmode ? ` inputmode="${f.inputmode}"` : ""}${f.maxlength ? ` maxlength="${f.maxlength}"` : ""}${f.upper ? ' autocapitalize="characters"' : ""}
-            placeholder="${esc(f.placeholder || "")}" value="${esc(val || "")}" aria-describedby="${describedBy}"${req}${type === "date" ? ` max="${new Date().toISOString().slice(0, 10)}"` : ""}>${err}</div>`;
+            enterkeyhint="next" placeholder="${esc(f.placeholder || "")}" value="${esc(val || "")}" aria-describedby="${describedBy}"${req}${type === "date" ? ` max="${new Date().toISOString().slice(0, 10)}"` : ""}>${err}</div>`;
       }
     }
   }
@@ -403,6 +440,11 @@
     nextBtn.classList.toggle("btn--send", !!step.review);
 
     $$(".field--idnumber input", stage).forEach(updateIdReadout);
+    if (!step.review) step.fields.forEach((f) => {
+      if (f.type !== "select" || !f.list) return;
+      const el = stage.querySelector(`[data-path="${fullPath(step, f)}"]`);
+      if (el) el.dataset.sig = f.list(data, scopeOf(step)).join("|");
+    });
     if (current > 0) $(".step__title", stage).focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
   }
@@ -426,6 +468,16 @@
       if (el.hidden === show) {
         el.hidden = !show;
         if (show) el.classList.add("is-arriving"), setTimeout(() => el.classList.remove("is-arriving"), 400);
+      }
+      const needsRerender =
+        (f.type === "select" && f.list && el.dataset.sig !== f.list(data, scopeOf(step)).join("|")) ||
+        (f.type === "claimrows" && show && +el.dataset.rows !== f.rows(data, scopeOf(step)));
+      if (needsRerender) {
+        const html = fieldHtml(step, f);
+        el.outerHTML = html;
+        const fresh = stage.querySelector(`[data-path="${fullPath(step, f)}"]`);
+        if (f.list) fresh.dataset.sig = f.list(data, scopeOf(step)).join("|");
+        return;
       }
       if (f.type === "combo" && f.list) {
         const dl = $(`#${idOf(fullPath(step, f))}-list`);
@@ -478,17 +530,35 @@
       const f = formatMoney(el.value);
       if (el.value !== f) el.value = f;
       set(data, path, f);
+    } else if (el.type === "tel" && el.selectionStart === el.value.length && e.inputType !== "deleteContentBackward") {
+      const d = digits(el.value);
+      const f = d.startsWith("27") ? `+27 ${d.slice(2, 4)} ${d.slice(4, 7)} ${d.slice(7, 11)}` : `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 10)}`;
+      el.value = f.trim().replace(/\s+/g, " ");
+      set(data, path, el.value);
     } else if (type === "idnumber") {
       set(data, path, el.value.trim());
       updateIdReadout(el);
     } else {
       set(data, path, el.value);
     }
+    const drv = path.match(/^vehicles\.(\d+)\.driver$/);
+    if (drv && el.value === "Me" && +drv[1] > 0) {
+      const me = data.vehicles.find((v, k) => k !== +drv[1] && v.driver === "Me" && v.licenceCode);
+      const cur = data.vehicles[+drv[1]];
+      if (me) ["licenceCode", "licenceYear"].forEach((k) => {
+        if (cur[k]) return;
+        cur[k] = me[k];
+        const input = document.getElementById(idOf(`vehicles.${drv[1]}.${k}`));
+        if (input) input.value = me[k];
+      });
+    }
     if (type === "cards" && e.type === "change") {
       // cover choice changes which steps exist
       steps = buildSteps(data);
     }
     if (wrap) clearError(wrap.dataset.path);
+    // the ID number checks itself the moment all 13 digits are in
+    if (type === "idnumber" && digits(el.value).length === 13) checkLive(wrap.dataset.path);
     refreshVisibility();
     saveDraft();
   }
@@ -498,13 +568,65 @@
     // make/model changes rename the vehicle in later step titles
     if (/^vehicles\.\d+\.(make|model)$/.test(e.target.name)) steps = buildSteps(data);
   });
+  function findField(path) {
+    const step = steps[current];
+    return step.fields.find((f) => fullPath(step, f) === path) ? { step, f: step.fields.find((f) => fullPath(step, f) === path) } : null;
+  }
+  function showError(path, msg) {
+    const wrap = stage.querySelector(`[data-path="${path}"]`);
+    if (!wrap) return;
+    wrap.classList.toggle("has-error", !!msg);
+    wrap.querySelector(".err").textContent = msg;
+    $$("input,select,textarea", wrap).forEach((i) => (msg ? i.setAttribute("aria-invalid", "true") : i.removeAttribute("aria-invalid")));
+  }
+  function checkLive(path) {
+    const hit = findField(path);
+    if (!hit) return;
+    const v = get(data, path);
+    if (isEmpty(typeof v === "string" ? v.trim() : v)) return;
+    showError(path, fieldError(hit.step, hit.f));
+  }
   form.addEventListener("focusout", (e) => {
+    const wrap = e.target.closest?.("[data-path]");
+    if (wrap && /^(INPUT|TEXTAREA)$/.test(e.target.tagName) && !/checkbox|radio/.test(e.target.type)) {
+      checkLive(wrap.dataset.path);
+      if (e.target.type === "email") suggestEmail(e.target, wrap);
+    }
     if (e.target.hasAttribute?.("autocapitalize") && e.target.value) {
       e.target.value = e.target.value.toUpperCase();
       set(data, e.target.name, e.target.value);
       saveDraft();
     }
   });
+
+  const MAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "live.com", "webmail.co.za", "mweb.co.za", "telkomsa.net", "vodamail.co.za", "iafrica.com"];
+  function editDistance(a, b) {
+    const m = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+    for (let j = 1; j <= b.length; j++) m[0][j] = j;
+    for (let i = 1; i <= a.length; i++)
+      for (let j = 1; j <= b.length; j++)
+        m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return m[a.length][b.length];
+  }
+  function suggestEmail(input, wrap) {
+    wrap.querySelector(".suggest")?.remove();
+    const [user, domain] = input.value.trim().toLowerCase().split("@");
+    if (!user || !domain || MAIL_DOMAINS.includes(domain)) return;
+    const best = MAIL_DOMAINS.map((d) => [d, editDistance(domain, d)]).sort((x, y) => x[1] - y[1])[0];
+    if (!best || best[1] > 2) return;
+    const fixed = `${user}@${best[0]}`;
+    const p = document.createElement("p");
+    p.className = "suggest";
+    p.innerHTML = `Did you mean <strong>${esc(fixed)}</strong>? <button type="button" class="linkbtn">Yes, fix it</button>`;
+    p.querySelector("button").addEventListener("click", () => {
+      input.value = fixed;
+      set(data, input.name, fixed);
+      p.remove();
+      showError(wrap.dataset.path, "");
+      saveDraft();
+    });
+    input.insertAdjacentElement("afterend", p);
+  }
 
   /* ── Validation ─────────────────────────────────────────────────────────── */
   function fieldError(step, f) {
@@ -514,8 +636,14 @@
       if (f.optional || f.optionalIfNoted) return "";
       if (typeof f.required === "string") return f.required;
       if (["choice", "select", "multi", "cards"].includes(f.type)) return "Please choose an option.";
+      if (f.type === "claimrows") return "Please pick the year and what happened for each claim.";
       if (f.type === "money") return f.unsure ? "Please enter an amount, or tick the box if you're not sure." : "Please enter an amount.";
       return f.type === "textarea" ? "Please add a few words here." : "Please fill this in.";
+    }
+    if (f.type === "claimrows") {
+      const n = f.rows(data, scopeOf(step));
+      const rows = (v || []).slice(0, n);
+      if (rows.length < n || rows.some((r) => !r || !r.year || !r.type)) return "Please pick the year and what happened for each claim.";
     }
     if (f.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "That email address doesn't look right. Please check it.";
     if (f.phone) {
@@ -528,7 +656,7 @@
       if (f.adult && r.age < 18) return "The policyholder needs to be 18 or older.";
     }
     if (f.type === "money" && v !== "Not sure" && !digits(v)) return "Please enter an amount.";
-    if (f.validate) return f.validate(v);
+    if (f.validate) return f.validate(v, data, scopeOf(step));
     return "";
   }
 
@@ -634,11 +762,13 @@
     const act = a.dataset.action;
     if (act === "add-vehicle") {
       if (!validateStep()) return;
-      data.vehicles.push({});
+      const first = data.vehicles[0] || {};
+      data.vehicles.push({ parking: first.parking }); // most people park every car the same way; still editable
       steps = buildSteps(data);
       goTo(indexOf(`veh${data.vehicles.length - 1}-car`));
     } else if (act === "remove-vehicle") {
       const i = +a.dataset.index;
+      if (!window.confirm(`Remove ${vehicleName(data, i)} from this quote?`)) return;
       data.vehicles.splice(i, 1);
       steps = buildSteps(data);
       goTo(indexOf(`veh${i - 1}-value`), { direction: "back" });
@@ -671,6 +801,7 @@
   function display(f, v) {
     if (Array.isArray(v)) {
       if (f.type === "repeat") return v.filter((it) => it.item || it.value).map((it) => `${it.item || "Item"} (${it.value || "value?"})`).join("; ");
+      if (f.type === "claimrows") return v.filter((r) => r && (r.year || r.type)).map((r) => `${r.year || "?"}: ${r.type || "?"}`).join("; ");
       if (f.type === "cards") return v.map((x) => f.options.find((o) => o.value === x)?.label || x).join(", ");
       return v.join(", ");
     }
@@ -692,7 +823,8 @@
       const rows = [];
       for (const f of step.fields) {
         if (!visible(step, f)) continue;
-        const v = get(data, fullPath(step, f));
+        let v = get(data, fullPath(step, f));
+        if (f.type === "claimrows") v = (v || []).slice(0, f.rows(data, scopeOf(step)));
         if (isEmpty(v)) continue;
         const text = display(f, v);
         if (!text) continue;
@@ -738,8 +870,9 @@
     const { sections, fields } = collect();
     const you = data.you || {};
     const name = `${you.firstName || ""} ${you.lastName || ""}`.trim();
+    if (!data.reference) { data.reference = makeReference(); saveDraft(); }
     const payload = {
-      reference: makeReference(),
+      reference: data.reference,
       submittedAt: new Date().toISOString(),
       source: params.get("src") === "card" ? "Business card QR" : data.consent?.heard || "Website",
       secondsToComplete: Math.round((Date.now() - startedAt) / 1000),
@@ -751,7 +884,7 @@
         contactBy: data.contact?.by || "",
         bestTime: data.contact?.when || "",
         cover: data.vehicles.map((v) => v.coverType).filter(Boolean).join("; ") + (data.trailer?.want === "Yes" ? " + " + (data.trailer.type || "trailer") : ""),
-        vehicles: data.vehicles.map((v) => [v.year, v.make === "Other" ? v.makeOther : v.make, v.model].filter(Boolean).join(" ")).join("; "),
+        vehicles: data.vehicles.map((v) => [v.year, v.make === "Other" ? v.makeOther : v.make, modelOf(v)].filter(Boolean).join(" ")).join("; "),
       },
       sections,
       fields,
@@ -762,7 +895,10 @@
       let ok = false;
       if (S.appsScriptUrl) {
         // text/plain keeps this a "simple" request, so Google's endpoint needs no CORS preflight
-        const res = await fetch(S.appsScriptUrl, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 25000);
+        const res = await fetch(S.appsScriptUrl, { signal: ctrl.signal, method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+        clearTimeout(timer);
         const out = await res.json().catch(() => ({}));
         ok = res.ok && out.ok !== false;
       } else if (local) {

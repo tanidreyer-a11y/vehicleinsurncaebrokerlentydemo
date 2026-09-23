@@ -43,6 +43,10 @@ window.QDATA = (function () {
   return {
     YEARS: range(thisYear + 1, 1985),
     LICENCE_YEARS: range(thisYear, 1960),
+    // Shown first in the dropdowns: the brands and insurers most South Africans will be looking for
+    POPULAR_MAKES: ["Toyota", "Volkswagen", "Suzuki", "Ford", "Hyundai", "Nissan", "Renault", "Kia", "Isuzu", "Haval", "Chery"],
+    POPULAR_INSURERS: ["Santam", "OUTsurance", "Discovery Insure", "Hollard", "King Price", "MiWay", "Old Mutual Insure", "Momentum Insure"],
+    CLAIM_TYPES: ["Accident", "Hijacking", "Theft of the car", "Break-in / theft from the car", "Hail or storm", "Windscreen or glass", "Fire", "Other"],
     MAKES: [...Object.keys(MODELS).sort((a, b) => a.localeCompare(b)), "Other"],
     MODELS,
     PROVINCES: ["Gauteng", "Western Cape", "KwaZulu-Natal", "Eastern Cape", "Free State", "Limpopo", "Mpumalanga", "North West", "Northern Cape"],

@@ -35,6 +35,12 @@ function doPost(e) {
     if (!p.summary || !p.summary.name || !p.summary.cell) return json_({ ok: false, error: 'Missing required details' });
 
     const sheet = getSheet_();
+    // A retry on a bad connection resends the same reference: don't add it twice
+    const refCol = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getValues()[0].indexOf('Reference') + 1;
+    if (refCol > 0 && sheet.getLastRow() > 1 &&
+        sheet.getRange(2, refCol, sheet.getLastRow() - 1, 1).createTextFinder(p.reference).matchEntireCell(true).findNext()) {
+      return json_({ ok: true, reference: p.reference, duplicate: true });
+    }
     const received = new Date();
     const values = {
       'Status': 'New',
