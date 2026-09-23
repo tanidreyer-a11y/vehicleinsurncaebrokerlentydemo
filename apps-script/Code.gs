@@ -11,7 +11,7 @@
  */
 
 const CONFIG = {
-  NOTIFY_EMAIL: 'CHANGE-ME@example.com',   // where new quote alerts go (can be several, comma separated)
+  NOTIFY_EMAIL: 'tanidreyer@gmail.com',   // where new quote alerts go (can be several, comma separated)
   BUSINESS_NAME: 'Broker Name Insurance',  // shown in emails
   BROKER_NAME: 'Broker Name',
   BROKER_PHONE: '072 147 0288',
